@@ -1,4 +1,5 @@
 import re
+import json
 import scrapy
 
 from bs4 import BeautifulSoup
@@ -16,7 +17,6 @@ class MySpider(scrapy.Spider):
 		if filename.is_file():
 			with open(filename, 'r') as f:
 				self.start_urls = [url.strip() for url in f.read().split('\n') if url.strip()]
-		self.start_urls = self.start_urls[:2]
 
 	def parse(self, response):
 		d = {'logos': [], 'phones': [], 'website': str(response.url)}
@@ -24,9 +24,11 @@ class MySpider(scrapy.Spider):
 		text = re.sub(r'\s{2,}', ' ', soup.get_text().strip())
 		phones = [' '.join(match).strip() for match in self.re_phone.findall(text)]
 		d['phones'] = list({
-			self.re_clean.sub(' ', phone) for phone in phones if len(re.sub('\s', '', phone)) > 5
+			re.sub(r'\s{2,}', ' ', self.re_clean.sub(' ', phone)) for phone in phones if 
+			len(re.sub('\s', '', phone)) > 5
 		})
 		d['logos'] = list({
 			img.attrib['src'] for img in response.css('img') if 
 			any(re.search('logo', img.attrib.get(attr, ''), re.IGNORECASE) for attr in ('class', 'id', 'src', 'tag'))
 		})
+		print(json.dumps(d))
