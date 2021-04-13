@@ -1,18 +1,18 @@
 import re
 import scrapy
 
+from pathlib import Path
+
 
 class MySpider(scrapy.Spider):
 	name = 'my_spider'
 
-	def start_requests(self):
-		urls = [
-#			'https://www.illion.com.au',
-			'https://www.cialdnb.com/en',
-			'https://www.cmsenergy.com/contact-us/default.aspx',
-		]
-		for url in urls:
-			yield scrapy.Request(url=url, callback=self.parse)
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		filename = Path(kwargs.get('filename', ''))
+		if filename.is_file():
+			with open(filename, 'r') as f:
+				self.start_urls = [url.strip() for url in f.read().split('\n') if url.strip()]
 
 	def parse(self, response):
 		for img in response.css('img'):
